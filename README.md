@@ -14,7 +14,7 @@
 # Contenido
 - [EMR Setup](#emr-setup)
 - [Laboratorio 1](#laboratorio-1)
-- [Laboratorio 2](#)
+- [Laboratorio 2](#laboratorio-2)
 - [Laboratorio 3](#)
 
 ------------
@@ -207,6 +207,7 @@ De la misma forma a la creación, tendremos que esperar a que se inicialice nues
 
 # Laboratorio 1
 
+## 1.1 Subir archivos a HDFS y S3
 Para el desarrollo de este primer laboratorio, una vez ya configuramos todos los pasos anteriores, podemos ingresar mediante SSH a nuestra instancia `master` y ejecutar los siguientes comandos:
 
 - `sudo yum update -y`
@@ -219,17 +220,17 @@ Para el desarrollo de este primer laboratorio, una vez ya configuramos todos los
 
 Con éstos lo que estamos haciendo es realizar la actualización de los paquetes, instalar git, clonar el repositorio del curso y luego copiar los datos de 'datasets' hacia nuestro hdfs. Para ello ejecutamos los comandos que contienen 'mkdir' 'copyFromLocal' y validamos con 'ls'.
 A continuación tienes imágenes de cómo se debería ver el proceso:
-![AWS homepage](./lab1-images/00.png)
-![AWS homepage](./lab1-images/01.png)
-![AWS homepage](./lab1-images/02.png)
-![AWS homepage](./lab1-images/03.png)
-![AWS homepage](./lab1-images/04.png)
+![Consola](./lab1-images/00.png)
+![Consola](./lab1-images/01.png)
+![Consola](./lab1-images/02.png)
+![Consola](./lab1-images/03.png)
+![Consola](./lab1-images/04.png)
 
 Luego podemos verificar también que el proceso se haya realizado satisfactoriamente desde la UI de Hue ingresando en el apartado de `Files`, el cual hace referencia a nuestro hdfs.
-![AWS homepage](./lab1-images/05.png)
+![Hue](./lab1-images/05.png)
 
 El proceso de copiar archivos que acabamos de realizar se puede realizar tanto mediante la consola como mediante la interfaz que nos provee Hue. Ya vimos la primera forma, así que veamos la segunda copiando éstos mismos archivos pero a nuestro s3. Para ello nos dirigimos a nuestro s3 e ingresamos al bucket.
-![AWS homepage](./lab1-images/06.png)
+![s3 en Hue](./lab1-images/06.png)
 
 En nuestra máquina local debemos clonar el repositorio del curso. Para ello podemos usar el mismo comando presentado anteriormente:
 - `git clone https://github.com/st0263eafit/st0263-241.git`
@@ -238,15 +239,163 @@ O el siguiente si tienes configurado SSH en tu máquina local:
 - `git clone git@github.com:st0263eafit/st0263-241.git`
 
 Luego, ya podrás arrastrar la carpeta 'datasets' en tu bucket.
-![AWS homepage](./lab1-images/07.png)
+![Hue](./lab1-images/07.png)
 
 Y se realizará la carga de los archivos así:
-![AWS homepage](./lab1-images/08.png)
+![Subir archivos](./lab1-images/08.png)
 
 Lo cual ya podrás comprobar allí mismo en Hue o incluso en el apartado de s3 de AWS.
-![AWS homepage](./lab1-images/09.png)
-![AWS homepage](./lab1-images/10.png)
+![Hue](./lab1-images/09.png)
+![S3](./lab1-images/10.png)
 
 ------------
 <br/>
+
+# Laboratorio 2
+
+## 2.1 Crear tablas en Hive para HDFS
+
+Para la creación de tablas en Hive, primero debemos ingresar a la interfaz de Hue y dirigirnos a la sección de `Hive`. Allí podremos ver la opción de `Query editor` y en ella podremos ejecutar la siguiente sentencia:
+
+```sql
+use usernamedb;
+CREATE TABLE HDI (id INT, country STRING, hdi FLOAT, lifeex INT, mysch INT, eysch INT, gni INT) 
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+```
+![hive](./lab2-images/00.png)
+
+Con ésta, habremos creado el esquema de la tabla `HDI`, el cual podemos confirmar a continuación:
+![hive](./lab2-images/01.png)
+
+Si miramos lo que contiene la tabla, veremos que no tiene datos con el siguiente comando:
+```sql
+SELECT * FROM HDI;
+```
+![hive](./lab2-images/02.png)
+
+Para cargar los datos en la base de datos, debemos dirigirnos a nuestro hdfs y copiar el archivo `hdi-data2.csv` o `hdi-data.csv` (son los mismos) en la carpeta `/user/hive/warehouse/hdi`. 
+![hue](./lab2-images/03.png)
+
+Y si volvemos a ejecutar el comando `SELECT * FROM HDI;` veremos que ahora sí tenemos datos en la tabla.
+![hive](./lab2-images/04.png)
+
+## 2.2 Crear tablas en Hive para S3
+Ahora realizaremos el mismo proceso pero para los datos que se encuentran en nuestro bucket de s3. Para ello, primero debemos crear la tabla en Hive con la siguiente sentencia:
+
+```sql
+CREATE EXTERNAL TABLE HDI2 (id INT, country STRING, hdi FLOAT, lifeex INT, mysch INT, eysch INT, gni INT) 
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' 
+STORED AS TEXTFILE 
+LOCATION 's3://ajcarornotebooks/datasets/onu/hdi/'
+```
+
+Y aquí hemos de notar que a diferencia de con el hdfs en el cual se usa `STORED AS TEXTFILE`, en s3 se usa `STORED AS TEXTFILE` para indicar que es una tabla externa. Por ende, asegurate de usar tu bucket en lugar de `ajcarornotebooks`.
+También es importante que la carpeta indicada ya exista en s3, de lo contrario, no se podrá crear la tabla. Para lo cual no tendrás problemas si seguiste los pasos del [laboratorio 1](#laboratorio-1).
+![hive](./lab2-images/05.png)
+
+Si ahora ejecutamos el comando `SELECT * FROM HDI2;` veremos que la tabla se ha creado correctamente y que contiene los datos del archivo `hdi-data2.csv`.
+![hive](./lab2-images/06.png)
+
+## 2.3 Consultas en Hive
+
+Ahora, realizaremos algunas consultas en Hive para validar que todo se encuentra en orden. Para ello, ejecutaremos las siguientes sentencias:
+
+```sql
+show tables;
+
+describe hdi2;
+
+select country, gni from hdi where gni > 2000;
+
+select country, gni from hdi2 where gni > 2000;
+```
+![hive](./lab2-images/07.png)
+![hive](./lab2-images/08.png)
+![hive](./lab2-images/09.png)
+![hive](./lab2-images/10.png)
+
+## 2.4 Join en Hive
+Para realizar un join en Hive, primero debemos crear una nueva tabla. Para ello, ejecutaremos la siguiente sentencia:
+
+```sql
+use usernamedb;
+CREATE EXTERNAL TABLE EXPO (country STRING, expct FLOAT) 
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' 
+STORED AS TEXTFILE 
+LOCATION 's3://ajcarornotebooks/datasets/onu/export/'
+```
+![hive](./lab2-images/11.png)
+
+Podemos verificar que la tabla se haya creado correctamente con el comando `SELECT * FROM EXPO;`.
+![hive](./lab2-images/12.png)
+
+Y ahora, realizaremos el join de las tablas `HDI` y `EXPO` con la siguiente sentencia:
+
+```sql
+SELECT h.country, gni, expct FROM HDI h JOIN EXPO e ON (h.country = e.country) WHERE gni > 2000;
+```
+![hive](./lab2-images/13.png)
+
+## 2.5 Ejercicio de WordCount
+
+Para realizar este ejercicio basta con ejecutar las siguientes sentencias:
+    
+```sql
+CREATE EXTERNAL TABLE docs (line STRING) 
+STORED AS TEXTFILE 
+LOCATION 's3://ajcarornotebooks/datasets/gutenberg-small/';
+
+SELECT word, count(1) AS count FROM (SELECT explode(split(line,' ')) AS word FROM docs) w 
+GROUP BY word 
+ORDER BY word DESC LIMIT 10;
+
+SELECT word, count(1) AS count FROM (SELECT explode(split(line,' ')) AS word FROM docs) w 
+GROUP BY word 
+ORDER BY count DESC LIMIT 10;
+```
+![hive](./lab2-images/14.png)
+![hive](./lab2-images/15.png)
+![hive](./lab2-images/16.png)
+
+## 2.6 Reto - Guardar resultados de query en una tabla
+Para finalizar el desarrollo del laboratorio 2 se nos propone el siguiente reto:
+> ¿Cómo llenar una tabla con los resultados de un Query? por ejemplo, como almacenar en una tabla el diccionario de frecuencia de palabras en el wordcount?
+
+Para ello, primero debemos crear la carpeta en la que se guardará la tabla. Para ello, nos dirigimos a nuestro bucket de s3 y creamos la carpeta `wordcount-results`.
+![hue](./lab2-images/17.png)
+
+Luego ejecutamos la siguiente sentencia para crear la tabla en Hive:
+
+```sql
+CREATE EXTERNAL TABLE word_count (
+  word STRING,
+  count INT
+)
+STORED AS TEXTFILE
+LOCATION 's3://ajcarornotebooks/datasets/wordcount-results/';
+```
+![hive](./lab2-images/18.png)
+
+Y ya procedemos a llenar la tabla con los resultados del wordcount. Para ello, ejecutamos la siguiente sentencia:
+
+```sql
+INSERT OVERWRITE TABLE word_count
+SELECT word, count FROM (
+  SELECT word, count(1) AS count 
+  FROM (
+    SELECT explode(split(line, ' ')) AS word 
+    FROM docs
+  ) w 
+  GROUP BY word 
+  ORDER BY count DESC 
+  LIMIT 10
+) subquery;
+```
+![hive](./lab2-images/19.png)
+
+Y si verificamos que la tabla se haya llenado correctamente con el comando `SELECT * FROM word_count;` veremos que los datos se encuentran allí.
+![hive](./lab2-images/20.png)
+
+
 
