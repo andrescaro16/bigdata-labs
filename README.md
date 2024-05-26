@@ -15,7 +15,7 @@
 - [EMR Setup](#emr-setup)
 - [Laboratorio 1](#laboratorio-1)
 - [Laboratorio 2](#laboratorio-2)
-- [Laboratorio 3](#)
+- [Laboratorio 3](#laboratorio-3)
 
 ------------
 <br/>
@@ -397,5 +397,31 @@ SELECT word, count FROM (
 Y si verificamos que la tabla se haya llenado correctamente con el comando `SELECT * FROM word_count;` veremos que los datos se encuentran allí.
 ![hive](./lab2-images/20.png)
 
+------------
+<br/>
+
+# Laboratorio 3
+
+## 3.1 Procesamiento de datos con Spark en AWS EMR
+Para el desarrollo de este laboratorio, primero debemos ingresar a nuestro s3, por ejemplo mediante Hue como lo hemos venido haciendo, y subir el notebook que se encuentra [aquí](https://github.com/andrescaro16/bigdata-labs/blob/main/Notebooks/Data_processing_using_PySpark.ipynb).
+![hive](./lab3-images/00.png)
+
+Luego, nos dirigimos a JupiterHub y abrimos el notebook que acabamos de subir.
+![hive](./lab3-images/01.png)
+
+Corroboramos que el notebook se haya cargado correctamente y que hagamos uso del kernel adecuado, que para el caso es `PySpark`.
+![hive](./lab3-images/02.png)
+
+Luego ya podremos ejecutar las celdas del notebook y ver los resultados de las operaciones realizadas.
+**Nota:** Recordar modificar el nombre del bucket `ajcarornotebooks` por el nombre de tu bucket s3 en las celadas que lo requieran.
+![hive](./lab3-images/03.png)
+
+Al finalizar el notebook, podremos ver los resultados de las operaciones realizadas en Hue, pues allí se escribirán los archivos generados.
+![hive](./lab3-images/04.png)
+![hive](./lab3-images/05.png)
+![hive](./lab3-images/06.png)
 
 
+## 3.2 Procesamiento de datos con Spark en Google Colab
+Ahora podremos realizar el mismo proceso que hicimos con AWS pero con Google Colab. Para ello, primero debemos subir el notebook que se encuentra [aquí](https://github.com/andrescaro16/bigdata-labs/blob/main/Notebooks/Data_processing_using_PySpark_google_colab.ipynb) a nuestro Google Drive, al igual que el archivo `sample_data.csv` que se encuentra en la carpeta `datasets`.
+![hive](./lab3-images/07.png)
